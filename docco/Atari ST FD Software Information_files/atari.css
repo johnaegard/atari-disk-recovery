@@ -1,0 +1,159 @@
+body
+{
+	color: #FFF;
+	background-image: url(/atari/_atari/atari-bg-inv.jpg);
+}
+a:link, a:visited {
+	color: #30C;
+}
+/* ------------------------------- sidebar ------------------------------------- */
+.twoColSr #sidebar, .twoColSl #sidebar {
+	font-size: 0.95em;
+	line-height: 1.15;
+	background-color: transparent;
+	border: 1px solid #F00;
+}
+.twoColSr #sidebar h1, .twoColSl #sidebar h1 {
+	font-family: Tahoma, Geneva, sans-serif;
+	font-size: 1.1em;
+	color: #fff;
+	text-align: center;
+	background-color: #F00;
+	margin: 0px;
+	padding: 5px;
+}
+.twoColSr #sidebar h2, .twoColSl #sidebar h2 {
+	font-family: Tahoma, Geneva, sans-serif;
+	font-size: 0.9em;
+	margin-top: 0px;
+	margin-bottom: 5px;
+	background-color: #00F;
+	color: #CF9;
+	text-align: left;
+	padding: 5px;
+}
+.twoColSr #sidebar p, .twoColSl #sidebar p {
+	font-size: 0.92em;
+	margin: 5px;
+	color: #FFF;
+}
+.oneCol #sidebar a:link, .oneCol #sidebar a:visited, .twoColSr #sidebar a:link, .twoColSr #sidebar a:visited, .twoColSl #sidebar a:link, .twoColSl #sidebar a:visited {
+	color:#FF6
+}
+
+/* ------------------------- mainContent ------------------------------- */
+.oneCol #mainContent {
+} 
+
+.twoColSr #mainContent, .twoColSl #mainContent {
+	background-color: transparent;
+} 
+
+.oneCol #mainContent h1, .twoColSr #mainContent h1, .twoColSl #mainContent h1  {
+	color: #0FF;
+	border-style: solid;
+	border-width: 1px;
+}
+.oneCol #mainContent h2, .twoColSr #mainContent h2, .twoColSl #mainContent h2 {
+	color: #0F6;
+}
+.oneCol #mainContent h3, .twoColSr #mainContent h3, .twoColSl #mainContent h3 {
+	color: #0FF;
+}
+.oneCol #mainContent h4, .twoColSr #mainContent h4, .twoColSl #mainContent h4 {
+	color: rgb(255, 255, 153);
+}
+.oneCol #mainContent p.highlight, .twoColSr #mainContent p.highlight, .twoColSl #mainContent p.highlight {
+	color: #FF0000;
+	background-color: #000000;
+	padding: 5px;
+	margin-top: 5px;
+	margin-right: 0px;
+	margin-bottom: 0px;
+	margin-left: 5px;
+	font-style: italic;
+}
+.oneCol #mainContent ul, .twoColSr #mainContent ul, .twoColSl #mainContent ul {
+	list-style-image: url(bullet1b.gif);
+	margin-left: 20px;
+	margin-top: 0px;
+	margin-bottom: 0px;
+	padding-top: 0px;
+	padding-right: 0px;
+	padding-bottom: 0px;
+	padding-left: 30px;
+}
+.oneCol #mainContent ul ul, .twoColSr #mainContent ul ul, .twoColSl #mainContent ul ul {
+	list-style-image: url(/atari/_atari/bullet2b.gif);
+	padding-left: 0px;
+}
+.oneCol #mainContent ul ul ul, .twoColSr #mainContent ul ul ul, .twoColSl #mainContent ul ul ul
+{
+	list-style-image: url(bullet3b.gif);
+}
+.oneCol #sbFloatRight ul li, .twoColSr #sbFloatRight ul li, .twoColSl #sbFloatRight ul li  {
+	margin: 0px;
+	padding: 0px;
+}
+.oneCol #sbFloatRight ul li, .twoColSr #sbFloatRight ul li, .twoColSl #sbFloatRight ul li {
+	margin: 0px;
+	padding: 0px;
+}
+.oneCol #mainContent a:link, .oneCol #mainContent a:visited, .twoColSr #mainContent a:link, .twoColSr #mainContent a:visited, .twoColSl #mainContent a:link, .twoColSl #mainContent a:visited {
+	color:#CF3
+}
+.oneCol #mainContent a.btt, .twoColSl #mainContent a.btt, .twoColSr #mainContent a.btt {
+	background-image: url(/_info-coach/top-inv.png);
+	color: #F63;
+	background-color: #333;
+	border-color: #666;
+}
+.oneCol #mainContent table
+{
+	table-border-color-light: #000;
+	table-border-color-dark: #000;
+	border-color: #0F3;
+}
+
+/* ----------------------- special ------------------------ */
+.code {
+	white-space:pre;
+	display: block;
+	font-family: "Courier New", Courier, monospace;
+	font-size:14px;
+	line-height: 0.9;
+	background-color: #CCC;
+	color: #000;
+	padding-left: 5px;
+	padding-top: 5px;
+	padding-bottom: 5px;
+	margin-top: 5px;
+	margin-right: 0px;
+	margin-bottom: 0px;
+	margin-left: 5px;
+}
+.oneCol #mainContent .smallcode {
+	white-space:pre;
+	font-family: "Courier New", Courier, monospace;
+	font-size:12px;
+	line-height: 0.9;
+	background-color: #333;
+	color: #3FC;
+	padding-left: 20px;
+	padding-top: 5px;
+	padding-bottom: 5px;
+	margin: 5px;
+	display: block;
+}.oneCol #container #mainContent .smallcode .highlight {
+	background-color: #333399;
+	color: #CCC;
+}
+.oneCol #container #mainContent ul li strong em .highlight {
+	background-color: #333;
+}
+.oneCol #container #mainContent .Atari_large_left {
+	color: #F00;
+	font-size: 32px;
+	font-family: Verdana, Geneva, sans-serif;
+	font-weight: bold;
+}

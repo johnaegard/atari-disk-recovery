@@ -1,0 +1,14 @@
+PROCEDURE remove_advantage
+  MENU KILL
+  DEFMOUSE 3
+  REPEAT
+  UNTIL MOUSEK
+  MOUSE x,y,k
+  find_mouse(x,y,r,c)
+  IF c=>7 AND c<=35 AND top_ad<>1 AND r=>6 AND r<=5+top_ad
+    ad_selected=r-5
+    ALERT 2,STR$(ad_selected),1,"OK",null
+  ENDIF
+  MENU menu$()
+RETURN
+ееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееее

@@ -1,0 +1,106 @@
+#!/usr/bin/env python3
+
+import sys
+
+identifiers = []
+
+def gosub_parms(bites):
+  bites_hex = '{:02x}'.format(bites[0]) + '{:02x}'.format(bites[1])
+  proc_idx = int(bites_hex,16)
+  return identifiers[11][proc_idx]
+
+def no_parms(bites):
+  return ""
+
+def comment_parms(bites):
+  return bites.decode("utf-8")
+
+def dump_parms(bites):
+  retval = ""
+  for b in range(0,len(bites),2):
+    retval = retval + "{:02x} {:02x} ".format(bites[b],bites[b+1])
+  return retval  
+
+def sput_parms(bites):
+  bites_hex = "00" + '{:02x}'.format(bites[1])
+  str_idx = int(bites_hex,16)
+  return identifiers[1][str_idx]
+
+def obg_parms(bites):
+  bites_hex = '00' + '{:02x}'.format(bites[1])
+  proc_idx = int(bites_hex,16)
+  return identifiers[11][proc_idx]
+
+
+default_op = { "name" : "????", "args": lambda x: ""}
+
+gfa_ops = {
+  216 :  { "name": ">PROCEDURE ",     "args": gosub_parms},
+  240 :  { "name": "@",               "args": gosub_parms },
+  460 :  { "name": "'",               "args": comment_parms },
+  528 :  { "name": "ON BREAK GOSUB ", "args": dump_parms},
+  1084 : { "name": "CLEAR",           "args": no_parms },
+  1136 : { "name": "DEFTEXT ",        "args": dump_parms},
+  1356 : { "name": "SPUT ",           "args": sput_parms},
+  1448 : { "name": "EVERY ",          "args": dump_parms }
+}
+
+
+def read_32bit_uint_bigendian(f):
+  bites = f.read(4)
+  bites_hex = '{:02x}'.format(bites[0]) + '{:02x}'.format(bites[1]) + '{:02x}'.format(bites[2]) + '{:02x}'.format(bites[3]) 
+  return int(bites_hex,16)
+
+def read_16bit_uint_bigendian(f):
+  bites = f.read(2)
+  bites_hex = '{:02x}'.format(bites[0]) + '{:02x}'.format(bites[1])
+  return int(bites_hex,16)
+
+def read_line(f):
+  length = read_16bit_uint_bigendian(f)
+  op = read_16bit_uint_bigendian(f)
+  remainder = f.read(length - 4)
+  sys.stdout.write("{:04x}".format(length))
+  sys.stdout.write(" ")
+  hex_opcode = "{:04x}".format(op)
+  sys.stdout.write(hex_opcode + "/")
+  sys.stdout.write("{:04d}".format(op)+" ")
+  sys.stdout.write(gfa_ops.get(op,default_op).get("name"))
+  sys.stdout.write(gfa_ops.get(op,default_op).get("args")(remainder))
+  print()
+
+id_classes = ['#','$','%','!','#[]','$[]','%[]','![]','&','|','10',' procedure','&[]','|[]']
+suffixes   = ['#','$','%','!','#[]','$[]','%[]','![]','&','|','10','','&[]','|[]']
+
+sep = []
+num_ids = []
+
+with open("identifiers.bin", "rb") as f:
+  f.read(2)  # 2 bytes of version
+  f.read(10) # 10 bytes of magic number
+  for i in range(38):
+    sep.append(read_32bit_uint_bigendian(f))
+
+  for i in range(38):
+    print('{:d} {:08x}'.format(i,sep[i]))
+
+  print("identifier block is {:d} bytes long".format(sep[16] - sep[0]))
+  for i in range(14):
+    num_ids.append(int((sep[20+i] - sep[19+i]) / 4))
+
+  for id_class in range(14):
+    identifiers.append([])
+    print("{:d} {:s} IDENTIFIERS".format(num_ids[id_class],id_classes[id_class]))
+    id_counter=0
+    while id_counter < num_ids[id_class]:
+      id_length = int(f.read(1)[0])
+      if id_length ==0:
+        continue
+      identifiers[id_class].append(f.read(id_length).decode("utf-8").lower() + suffixes[id_class])
+      print("  {:x} {:s}{:s}".format(id_counter,identifiers[id_class][id_counter],id_classes[id_class]))
+      id_counter+=1 
+
+  f.read(6)   # the bits between identifiers and program.
+
+  while(True):
+    read_line(f) 

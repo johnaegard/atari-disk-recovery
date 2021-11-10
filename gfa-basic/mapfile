@@ -1,0 +1,12 @@
+# Mapfile. Created by GNU ddrescue version 1.23
+# Command line: ddrescue -f -r3 -n -d /dev/sdf gfa-basic.img mapfile
+# Start time:   2021-10-28 17:10:37
+# Current time: 2021-10-28 17:13:33
+# Finished
+# current_pos  current_status  current_pass
+0x000AC800     +               3
+#      pos        size  status
+0x00000000  0x00000200  -
+0x00000200  0x000AC600  +
+0x000AC800  0x00000200  -
+0x000ACA00  0x00007600  +
