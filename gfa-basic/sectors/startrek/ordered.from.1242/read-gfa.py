@@ -40,6 +40,12 @@ def let_string_parms(bites):
 def let_bool_parms(bites):
   return let_parms(3,bites)
 
+def let_fp_ary_parms(bites):
+  return let_parms(4,bites)
+
+def let_bool_ary_parms(bites):
+  return let_parms(7,bites)
+
 def let_parms(id_type, bites):
   bites_hex = '{:02x}'.format(bites[0]) + '{:02x}'.format(bites[1])
   var_idx = int(bites_hex,16)
@@ -89,13 +95,16 @@ gfa_ops = {
   244 :  { "name": "GOSUB",           "args": gosub_parms,  "openindent":False, "closeindent":False},
   304 :  { "name": "LET",            "args": let_fp_parms,  "openindent":False, "closeindent":False},
   308 :  { "name": "LET",            "args": let_string_parms,  "openindent":False, "closeindent":False},
-  340 :  { "name": "LET",            "args": let_bool_parms,  "openindent":False, "closeindent":False},
+  316 :  { "name": "LET",            "args": let_bool_parms,  "openindent":False, "closeindent":False},
+  328 :  { "name": "LET",            "args": let_fp_ary_parms,  "openindent":False, "closeindent":False},
+  340 :  { "name": "LET",            "args": let_bool_ary_parms,  "openindent":False, "closeindent":False},
   352 :  { "name": "PLOT",           "args": dump_parms ,  "openindent":False, "closeindent":False},
   460 :  { "name": "'",               "args": comment_parms,  "openindent":False, "closeindent":False},
   468 :  { "name": "DATA",           "args": dump_parms ,  "openindent":False, "closeindent":False},
   528 :  { "name": "ON BREAK GOSUB", "args": obg_parms,  "openindent":False, "closeindent":False},
   588 :  { "name": "PRINT",           "args": dump_parms,  "openindent":False, "closeindent":False},
   596 :  { "name": "TEXT",            "args": dump_parms,  "openindent":False, "closeindent":False},
+  620 :  { "name": "LINE",            "args": dump_parms,  "openindent":False, "closeindent":False},
   640 :  { "name": "INC",             "args": let_fp_parms,  "openindent":False, "closeindent":False},
   840 :  { "name": "DIM",             "args": dump_parms,  "openindent":False, "closeindent":False},
   844 :  { "name": "SETCOLOR",        "args": dump_parms,  "openindent":False, "closeindent":False},
@@ -109,9 +118,13 @@ gfa_ops = {
   1148 : { "name": "BOX",            "args": dump_parms,  "openindent":False, "closeindent":False},
   1164 : { "name": "CIRCLE",         "args": dump_parms,  "openindent":False, "closeindent":False},
   1260 : { "name": "CLS",            "args": dump_parms,  "openindent":False, "closeindent":False},
+  1348 : { "name": "SGET",           "args": sput_parms,  "openindent":False, "closeindent":False},
   1356 : { "name": "SPUT",           "args": sput_parms,  "openindent":False, "closeindent":False},
-  1448 : { "name": "EVERY",          "args": dump_parms ,  "openindent":False, "closeindent":False},
-  1488 : { "name": "READ",           "args": dump_parms ,  "openindent":False, "closeindent":False}
+  1436 : { "name": "CLIP",           "args": dump_parms,  "openindent":False, "closeindent":False},
+  1448 : { "name": "EVERY",          "args": dump_parms,  "openindent":False, "closeindent":False},
+  1488 : { "name": "READ",           "args": dump_parms,  "openindent":False, "closeindent":False},
+  1548 : { "name": "BOUNDARY",       "args": dump_parms,  "openindent":False, "closeindent":False},
+  1588 : { "name": "ARRAYFILL",      "args": dump_parms,  "openindent":False, "closeindent":False}
 }
 
 
@@ -154,7 +167,7 @@ suffixes   = ['#','$','%','!','#[]','$[]','%[]','![]','&','|','10','','&[]','|[]
 sep = []
 num_ids = []
 
-with open("identifiers.bin", "rb") as f:
+with open("dsduel.gfa", "rb") as f:
 #with open("PROC.GFA", "rb") as f:
   f.read(2)  # 2 bytes of version
   f.read(10) # 10 bytes of magic number
