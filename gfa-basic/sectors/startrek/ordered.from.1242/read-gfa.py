@@ -13,7 +13,7 @@ def no_parms(bites):
   return ""
 
 def comment_parms(bites):
-  return bites[:-2].decode("utf-8")
+  return bites.decode("utf-8")
 
 def dump_parms(bites):
   retval = ""
@@ -106,6 +106,8 @@ gfa_ops = {
   596 :  { "name": "TEXT",            "args": dump_parms,  "openindent":False, "closeindent":False},
   620 :  { "name": "LINE",            "args": dump_parms,  "openindent":False, "closeindent":False},
   640 :  { "name": "INC",             "args": let_fp_parms,  "openindent":False, "closeindent":False},
+  720 :  { "name": "ADD",             "args": dump_parms,  "openindent":False, "closeindent":False},
+  752 :  { "name": "SUB",             "args": dump_parms,  "openindent":False, "closeindent":False},
   840 :  { "name": "DIM",             "args": dump_parms,  "openindent":False, "closeindent":False},
   844 :  { "name": "SETCOLOR",        "args": dump_parms,  "openindent":False, "closeindent":False},
   1028 : { "name": "GET",             "args": dump_parms,  "openindent":False, "closeindent":False},
@@ -174,10 +176,12 @@ with open("dsduel.gfa", "rb") as f:
   for i in range(38):
     sep.append(read_32bit_uint_bigendian(f))
 
-  #for i in range(38):
-  #  print('{:d} {:08x}'.format(i,sep[i]))
+  for i in range(38):
+    print('{:d} {:08x}'.format(i,sep[i]))
 
-  #print("identifier block is {:d} bytes long".format(sep[16] - sep[0]))
+  print("identifier block is {:d} bytes long".format(sep[16] - sep[0]))
+  print("code is {:d} bytes long".format(sep[19] - sep[16]))
+
   for i in range(14):
     num_ids.append(int((sep[20+i] - sep[19+i]) / 4))
 

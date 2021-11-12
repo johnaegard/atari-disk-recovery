@@ -1,0 +1,303 @@
+CLEAR
+ON BREAK GOSUB breaker
+scroll_setup
+one_time_variable_setup
+page_flipping_setup
+interface_screen_setup
+put_setup
+screen_setup
+joystick_setup
+constant_setup
+' interface
+clip_setup
+poll_joystick
+'
+' **** Interface Procedures ****
+'
+> PROCEDURE interface
+  scroll_setup
+  EVERY 20 GOSUB scroller
+  DEFTEXT 1,0,0,13
+  GRAPHMODE 3
+  BOUNDARY 0
+  CLIP OFF
+  ship#=1
+  current_button#=1
+  DO
+    SPUT interface_screen$
+    get_controllers
+    IF stick_neutral!
+      SELECT stick#
+      CASE 1 ! up
+        stick_neutral!=FALSE
+        DEC current_button#
+        IF current_button#<1
+          current_button#=num_buttons#
+        ENDIF
+      CASE 2 ! down
+        stick_neutral!=FALSE
+        INC current_button#
+        IF current_button#>num_buttons#
+          current_button#=1
+        ENDIF
+      ENDSELECT
+    ENDIF
+    IF stick#=0
+      stick_neutral!=TRUE
+    ENDIF
+    PBOX buttonx1#(current_button#),buttony1#(current_button#),buttonx2#(current_button#),buttony2#(current_button#)
+    PRINT AT(1,24);MID$(scroll$,scroll_counter#,80);
+    swap_screens
+  LOOP
+RETURN
+> PROCEDURE scroller
+  INC scroll_counter#
+  IF scroll_counter#=>LEN(scroll$)
+    scroll_counter#=1
+  ENDIF
+RETURN
+'
+' **** Main Loop Procedures ****
+'
+PROCEDURE breaker
+  STICK 0
+  a#=MAX(screen_1#,screen_2#)
+  VOID XBIOS(5,L:a#,L:a#,-1)
+  WAVE 0,0
+  stop_sound
+  STOP
+RETURN
+> PROCEDURE poll_joystick
+  DO
+    fps#=TIMER
+    FOR ship#=1 TO 2
+      IF NOT ship_destroyed!(ship#)
+        get_controllers
+        IF (stick# AND 1)=1 AND power#(ship#)>0
+          thrust(ship#)
+        ELSE IF thrust_on!(ship#)
+          thrust_on!(ship#)=FALSE
+          stop_sound
+        ENDIF
+        IF (stick# AND 2)=2
+          IF button_change!(ship#)=FALSE
+            button_change!(ship#)=TRUE
+            INC button#(ship#)
+            IF button#(ship#)>3
+              button#(ship#)=1
+            ENDIF
+          ENDIF
+        ELSE
+          button_change!(ship#)=FALSE
+        ENDIF
+        update_button(ship#)
+        IF (stick# AND 4)=4
+          DEC rot#(ship#)
+          checkrot(ship#)
+        ENDIF
+        IF (stick# AND 8)=8
+          INC rot#(ship#)
+          checkrot(ship#)
+        ENDIF
+        IF (button# AND power#(ship#)>0) AND (stick# AND 2)<>2
+          SELECT button#(ship#)
+          CASE 1
+            phaser_handler(ship#)
+            IF hit!(target#)
+              resolve_damage(target#,phaser_damage#)
+              hit!(target#)=FALSE
+            ENDIF
+          CASE 2
+            fire_photon(ship#)
+          CASE 3
+            charge_shields(ship#)
+          ENDSELECT
+        ELSE IF (NOT button#) AND photon_damage#(ship#)>0 AND NOT photon_fired!(ship#,1)
+          photon_charging!(ship#)=FALSE
+          photon_ready!(ship#)=TRUE
+        ENDIF
+        IF button# AND photon_ready!(ship#)=TRUE AND photon_damage#(ship#)>0 AND (NOT photon_fired!(ship#,1)) AND (button#(ship#)=2)
+          photon_ready!(ship#)=FALSE
+          fire_charged_photon(ship#)
+        ENDIF
+        IF photon_charging!(ship#) OR photon_ready!(ship#)
+          show_charging_photon(ship#)
+        ENDIF
+        move_ship(ship#)
+      ENDIF
+    NEXT ship#
+    FOR ship#=1 TO 2
+      IF shield!(ship#)
+        shield!(ship#)=FALSE
+        shields_on(ship#)
+      ENDIF
+      IF NOT ship_destroyed!(ship#)
+        draw(ship#)
+      ELSE
+        explode(ship#)
+      ENDIF
+      move_photons(ship#)
+      recharge(ship#)
+    NEXT ship#
+    IF game_over!
+      IF winner#=1
+        PRINT AT(10,24);"KLINGON WINS"
+      ELSE
+        PRINT AT(10,24);"ENTERPRISE WINS"
+      ENDIF
+    ENDIF
+    fps#=TIMER-fps#
+    swap_screens
+    SPUT background$
+    IF systems_damage!
+      LET systems_damage!=FALSE
+      FOR p#=1 TO 2
+        FOR i#=1 TO 5
+          IF damage#(p#,i#)
+            PRINT AT(2+damage#(p#,i#)+71*(p#-1),19+i#);"*"
+          ENDIF
+        NEXT i#
+      NEXT p#
+      SGET background$
+    ENDIF
+    update_gauges
+  LOOP UNTIL game_over!
+RETURN
+'
+' **** Setup Procedures ****
+'
+> PROCEDURE interface_screen_setup
+  swap_screens
+  CLS
+  LINE 0,384,639,384
+  LINE 0,366,639,366
+  DEFTEXT 1,9,0,13
+  TEXT 1,20,"Deepspace Duel Game Options:"
+  interface_button_setup
+  DEFTEXT 1,1,0,6
+  TEXT 1,40,"MOVEMENT:"
+  TEXT 1,55,"BOUNCE:       "
+  TEXT 1,85,"COLLISIONS:    "
+  DEFTEXT 1,0,0,6
+  TEXT 1,65," -BOUNCE FACTOR"
+  TEXT 1,95," -DAMAGE FACTOR"
+  TEXT 1,115,"THRUST   "
+  TEXT 1,125,"FRICTION "
+  TEXT 1,135,"THRUST COST    "
+  TEXT 1,145,"SPEED LIMIT    "
+  SGET interface_screen$
+  '  poll_mouse
+  CLS
+RETURN
+> PROCEDURE interface_button_setup
+  num_buttons#=8
+  DIM button_title$(num_buttons#)
+  DIM buttonx1#(num_buttons#),buttonx2#(num_buttons#),buttony1#(num_buttons#),buttony2#(num_buttons#)
+  DIM button_type#(num_buttons#)
+  DIM value#(num_buttons#)
+  FOR i#=1 TO num_buttons#
+    READ button_title$(i#)
+    READ buttonx1#(i#),buttony1#(i#),buttonx2#(i#),buttony2#(i#)
+    READ button_type#(i#)
+    READ value#(i#)
+    TEXT buttonx1#(i#)+1,buttony1#(i#)+8,button_title$(i#)
+  NEXT i#
+  DATA "BOUNCE",0,47,58,57,1,0
+  DATA "-BOUNCE FACTOR",8,57,121,67,2,0.8
+  DATA "COLLISIONS",0,77,89,87,1,0
+  DATA "-DAMAGE FACTOR",8,87,121,97,2,1
+  DATA "THRUST",0,107,49,117,2,1.5
+  DATA "FRICTION",0,117,68,127,2,0.1
+  DATA "THRUST COST",0,127,89,137,2,0.5
+  DATA "SPEED LIMIT",0,137,89,147,2,30
+RETURN
+> PROCEDURE scroll_setup
+  scroll$="                                                                              Light In The Tunnel Studios Proudly Presents .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  D E E P S P A C E   D U E L"
+  scroll$=scroll$+" .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  Programmed by John Aegard.  Graphics by Jan Morrison and Jason Aho.  Reality checking by Jan Morrison.  Playtested by John Aegard, Jason Aho, Jan Morrison,"
+  scroll$=scroll$+" James E. Duggan, Joe Duggan, James Ristola, Jamie Nichols, and C. Josef Beale.  If you enjoy this program, please send $10 CDN to Light In The Tunnel Studios, 317 Van Norman Street, Thunder Bay, Ontario, Canada.  P7A 4C1."
+  scroll$=scroll$+"                                                                              "
+RETURN
+> PROCEDURE joystick_setup
+  STICK 1
+RETURN
+PROCEDURE put_setup
+  swap_screens
+  CLS
+  DIM ship$(3,25)
+  DIM explosion$(25)
+  DIM photon$(6)
+  FOR i#=25 TO 125 STEP 25
+    DEFLINE 1,2
+    CIRCLE i#,i#,i#
+    GET 0,0,i#*2,i#*2,explosion$((i#)/25)
+    CLS
+  NEXT i#
+  CLS
+  CIRCLE 25,25,25
+  GET 0,0,50,50,shield$
+  CLS
+  DEFFILL 1,2,8
+  PBOX 4,0,64,14
+  GET 4,0,64,14,button$
+  CLS
+  OPEN "i",#1,"a:\trek\trek.pi3"
+  null$=INPUT$(34,#1)
+  pic$=INPUT$(32000,#1)
+  SPUT pic$
+  pic$=""
+  FOR row#=1 TO 2
+    FOR col#=1 TO 12
+      INC frame#
+      GET (col#-1)*50+1,(row#-1)*49+1,(col#-1)*50+49,(row#-1)*49+48,ship$(1,frame#)
+    NEXT col#
+  NEXT row#
+  frame#=0
+  FOR row#=3 TO 4
+    FOR col#=1 TO 12
+      INC frame#
+      GET (col#-1)*50+1,(row#-1)*49+1,(col#-1)*50+49,(row#-1)*49+48,ship$(3,frame#)
+    NEXT col#
+  NEXT row#
+  frame#=0
+  FOR row#=5 TO 6
+    FOR col#=1 TO 12
+      INC frame#
+      GET (col#-1)*50+1,(row#-1)*49+1,(col#-1)*50+49,(row#-1)*49+48,ship$(2,frame#)
+    NEXT col#
+  NEXT row#
+  FOR col#=1 TO 6
+    GET 601,(col#-1)*18+1,617,(col#-1)*18+17,photon$(col#)
+  NEXT col#
+  '  poll_mouse
+  CLS
+  PBOX 4,5,66,395
+  GET 4,5,66,395,internal_damage_flash$
+  CLS
+RETURN
+> PROCEDURE screen_setup
+  SETCOLOR 0,0
+  CLS
+  FOR i#=1 TO 150
+    cornerx#=RANDOM(507)
+    cornery#=RANDOM(399)
+    IF RANDOM(2)
+      BOX cornerx#+66,cornery#,cornerx#+67,cornery#+1
+    ELSE
+      PLOT cornerx#+66,cornery#
+    ENDIF
+  NEXT i#
+  DEFLINE 1,3
+  BOX 0,1,639,399
+  DEFLINE 1,1
+  BOX 4,5,635,395
+  PRINT AT(2,14);"E S T H"
+  PRINT AT(73,14);"E S T H"
+  FOR i#=9 TO 57 STEP 16
+    BOX i#,208,i#+6,8
+  NEXT i#
+  FOR i#=577 TO 625 STEP 16
+    BOX i#,208,i#+6,8
+  NEXT i#
+  PRINT AT(2,15);"Phasers"
+  PRINT AT(2,16);"Photons"
+  PRINT AT(2,17);
