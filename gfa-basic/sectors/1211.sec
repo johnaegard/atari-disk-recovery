@@ -1,0 +1,23 @@
+i
+  LET flee$=MKI$(7)+MKI$(7)+MKI$(1)
+  LET flee$=flee$+MKI$(0)+MKI$(1)
+  FOR i%=1 TO 16
+    READ backgrnd
+    LET flee$=flee$+MKI$(backgrnd)
+  NEXT i%
+  FOR i%=1 TO 16
+    READ foregrnd
+    LET flee$=flee$+MKI$(foregrnd)
+  NEXT i%
+  '
+  LET trident$=MKI$(1)+MKI$(1)+MKI$(1)
+  LET trident$=trident$+MKI$(0)+MKI$(1)
+  FOR i%=1 TO 16
+    READ backgrnd
+    LET trident$=trident$+MKI$(backgrnd)
+  NEXT i%
+  FOR i%=1 TO 16
+    READ foregrnd
+    LET trident$=trident$+MKI$(foregrnd)
+  NEXT i%
+RET

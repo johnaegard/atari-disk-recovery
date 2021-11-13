@@ -1,0 +1,19 @@
+> PROCEDURE mega_data
+  OPEN "o",#1,"gurpads1.dat"
+  PRINT #1;CHR$(50)
+  CLOSE #1
+  OPEN "r",#1,"gurpads2.dat",108
+  FIELD #1,25 AS ad_name$,3 AS ad_cost$,80 AS ad_description$
+  FOR i=1 TO 50
+    PRINT i
+    n$="Advantage #"+STR$(i)
+    c$=STR$(RANDOM(25))
+    d$="Test data"
+    LSET ad_name$=n$
+    LSET ad_cost$=c$
+    LSET ad_description$=d$
+    PUT #1,i
+  NEXT i
+  CLOSE #1
+RETURN
+еееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееееее
