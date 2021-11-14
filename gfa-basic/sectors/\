@@ -4,12 +4,6 @@ import sys
 import glob
 import subprocess 
 
-class PointerJumpedTooFarError(Exception):
-  pass
-
-class IllegalOpError(Exception):
-  pass
-
 identifiers = []
 indent =0
 sep = []
@@ -19,7 +13,7 @@ default_op = { "name" : "????", "args": lambda x: "", "openindent":False, "close
 id_classes = ['#','$','%','!','#[]','$[]','%[]','![]','&','|','10',' procedure','&[]','|[]']
 suffixes   = ['#','$','%','!','#[]','$[]','%[]','![]','&','|','10','','&[]','|[]']
 MAX_OVERSHOOT=40
-MAX_GFA_OPERATION=1695
+
 def gosub_parms(bites):
   bites_hex = '{:02x}'.format(bites[0]) + '{:02x}'.format(bites[1])
   proc_idx = int(bites_hex,16)
@@ -59,22 +53,14 @@ def let_bool_parms(bites):
 def let_fp_ary_parms(bites):
   return let_parms(4,bites)
 
-def let_int_ary_parms(bites):
-  return let_parms(6,bites)
-
 def let_bool_ary_parms(bites):
   return let_parms(7,bites)
 
 def let_parms(id_type, bites):
   bites_hex = '{:02x}'.format(bites[0]) + '{:02x}'.format(bites[1])
   var_idx = int(bites_hex,16)
-  #print("{:d} {:04x} {:s}".format(id_type,var_idx))
-  #identifier = identifiers[id_type][var_idx] 
-  #print("{:d} {:04x} {:s}".format(id_type,var_idx,identifier))
-  try:
-    return identifiers[id_type][var_idx] + " " +dump_parms(bites[2:])
-  except IndexError:
-    raise Exception("identifier out-of-range")
+  print(str(id_type)+ " " + str(var_idx))
+  return identifiers[id_type][var_idx] + " " +dump_parms(bites[2:])
 
 gfa_ops = {
   0   :  { "name": "DO",              "args": no_parms,    "openindent":True,  "closeindent":False},
@@ -120,7 +106,6 @@ gfa_ops = {
   308 :  { "name": "LET",            "args": let_string_parms,  "openindent":False, "closeindent":False},
   316 :  { "name": "LET",            "args": let_bool_parms,  "openindent":False, "closeindent":False},
   328 :  { "name": "LET",            "args": let_fp_ary_parms,  "openindent":False, "closeindent":False},
-  336 :  { "name": "LET",            "args": let_int_ary_parms,  "openindent":False, "closeindent":False},
   340 :  { "name": "LET",            "args": let_bool_ary_parms,  "openindent":False, "closeindent":False},
   352 :  { "name": "PLOT",           "args": dump_parms ,  "openindent":False, "closeindent":False},
   460 :  { "name": "'",               "args": comment_parms,  "openindent":False, "closeindent":False},
@@ -168,17 +153,9 @@ def read_line(bites,pointer):
     raise Exception("zero-length operator!")
   pointer += 2
   op = read_16bit_uint_bigendian(bites[pointer:pointer+2])
-  if op > MAX_GFA_OPERATION:
-    raise IllegalOpError("{:d} is not a legal gfa operation!".format(op)) 
-  elif op % 4 != 0:
-    raise IllegalOpError("{:d} not legal gfa op, not divisible by 4!".format(op)) 
   pointer += 2
   remainder = bites[pointer:pointer+length-4]
   pointer += length -4
-
-  # verify RETURN in right place
-  if op == 28 and indent != 1:
-    raise Exception("badly-placed RETURN")
   #sys.stdout.write("{:04x}".format(length))
   #sys.stdout.write(" ")
   hex_opcode = "{:04x}".format(op)
@@ -195,18 +172,9 @@ def read_line(bites,pointer):
   #print()
   if opstruct["openindent"]:
     indent +=1
-
   return pointer
 
 def read_file(bites):
-  global identifiers
-  global sep
-  global num_ids
-  global indent
-  identifiers = []
-  sep = []
-  num_ids = []
-  indent = 0
   pointer = 12 # 2 bytes of version + 10 bytes of magic number
   for i in range(38):
     sep.append(read_32bit_uint_bigendian(bites[pointer:pointer+4]))
@@ -232,7 +200,7 @@ def read_file(bites):
         continue
       identifiers[id_class].append(bites[pointer:pointer+id_length].decode("utf-8").lower() + suffixes[id_class])
       pointer += id_length
-      # print("  {:x} {:s}".format(id_counter,identifiers[id_class][id_counter]))
+      #print("  {:x} {:s}".format(id_counter,identifiers[id_class][id_counter]))
       id_counter+=1 
 
   pointer += 6   # miscellaneous debris at end of id section. 
@@ -241,32 +209,17 @@ def read_file(bites):
     try:
       newpointer = read_line(bites,pointer) 
       if newpointer > len(bites):
-        raise PointerJumpedTooFarError("pointer starting at {:04x} jumped {:04x} beyond EOF".format(pointer,newpointer))
+        raise Exception("pointer {:02x} jumped beyond EOF".format(newpointer))
       pointer = newpointer
-    except PointerJumpedTooFarError as err:
-      sys.stdout.write("..stopped at byte {:04x}/{:04x}..{:s} {:s}..".format(newpointer,len(bites),str(type(err).__name__),str(err)))
-      if newpointer - len(bites) > MAX_OVERSHOOT:
-        sys.stdout.write("overshot by > {:d} bytes..".format(MAX_OVERSHOOT))
-        return False
-      else:
-        return True
-    except IndexError as err:
-      sys.stdout.write("..stopped at byte {:04x}/{:04x}..{:s} {:s}..".format(newpointer,len(bites),str(type(err).__name__),str(err)))
-      if len(bites) - pointer > MAX_OVERSHOOT:
-        sys.stdout.write("undershot EOF by {:d} bytes..".format(pointer,MAX_OVERSHOOT))
-        return False
-      else: 
-        return True
-    except IllegalOpError as err:
-      sys.stdout.write("..stopped at byte {:04x}/{:04x}..{:s} {:s}..".format(newpointer,len(bites),str(type(err).__name__),str(err)))
-      return False
     except BaseException as err:
-      sys.stdout.write("..stopped at byte {:04x}/{:04x}..{:s} {:s}..".format(newpointer,len(bites),str(type(err).__name__),str(err)))
-      if str(err) == "badly-placed RETURN":
+      sys.stdout.write("..stopped at byte {:04x}/{:04x}".format(pointer,len(bites)) + ".." + str(err) + "..")
+      if str(err) == "zero-length operator!":
         return False
-      if str(err) == "identifier out-of-range":
-        return False 
-      elif str(err) == "zero-length operator!":
+      elif newpointer - len(bites) > MAX_OVERSHOOT:
+        sys.stdout.write("by more than {:d} bytes..".format(newpointer,MAX_OVERSHOOT))
+        return False
+      elif len(bites) - pointer > MAX_OVERSHOOT:
+        sys.stdout.write("{:d} is more than {:d} bytes short of EOF..".format(pointer,MAX_OVERSHOOT))
         return False
       return True
 
