@@ -10,6 +10,9 @@ class PointerJumpedTooFarError(Exception):
 class IllegalOpError(Exception):
   pass
 
+class BadReturnError(Exception):
+  pass
+
 identifiers = []
 indent =0
 sep = []
@@ -178,7 +181,7 @@ def read_line(bites,pointer):
 
   # verify RETURN in right place
   if op == 28 and indent != 1:
-    raise Exception("badly-placed RETURN")
+    raise BadReturnError()
   #sys.stdout.write("{:04x}".format(length))
   #sys.stdout.write(" ")
   hex_opcode = "{:04x}".format(op)
@@ -260,10 +263,14 @@ def read_file(bites):
     except IllegalOpError as err:
       sys.stdout.write("..stopped at byte {:04x}/{:04x}..{:s} {:s}..".format(newpointer,len(bites),str(type(err).__name__),str(err)))
       return False
+    except UnicodeDecodeError as err:
+      sys.stdout.write("..stopped at byte {:04x}/{:04x}..{:s} {:s}..".format(newpointer,len(bites),str(type(err).__name__),str(err)))
+      return False
+    except BadReturnError as err:
+      sys.stdout.write("..stopped at byte {:04x}/{:04x}..{:s} {:s}..".format(newpointer,len(bites),str(type(err).__name__),str(err)))
+      return False
     except BaseException as err:
       sys.stdout.write("..stopped at byte {:04x}/{:04x}..{:s} {:s}..".format(newpointer,len(bites),str(type(err).__name__),str(err)))
-      if str(err) == "badly-placed RETURN":
-        return False
       if str(err) == "identifier out-of-range":
         return False 
       elif str(err) == "zero-length operator!":
@@ -292,7 +299,7 @@ def advance_one_sector(cycle,idx,num_sequences,sequence):
   return sequences
 
 if __name__ == '__main__':
-  sequences  = [["1242.sec","1243.sec","1244.sec","1245.sec","1246.sec","1247.sec","1248.sec"]]
+  sequences  = [["1242.sec","1243.sec","1244.sec","1245.sec","1246.sec","1247.sec","1248.sec","1249.sec","1250.sec","185.sec"]]
   running = True
   advanced_sequences = [] 
   cycle = 0 
@@ -307,4 +314,4 @@ if __name__ == '__main__':
     sequences = advanced_sequences
 
   for seq in sequences:
-    print("cat " + " ".join(seq) + " > /tmp/foo; ./read-gfa.py")
+    print("cat " + " ".join(seq) + " > /tmp/foo; ./read-gfa.py | less")

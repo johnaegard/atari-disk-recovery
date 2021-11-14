@@ -19,15 +19,13 @@ with open("./gfa-basic.img", "rb") as f:
     if re.search(b'[A-Z_]+.[A-Z_]+.[A-Z_]+.[A-Z_]+.[A-Z_]+.[A-Z_]+',sector_contents):
       filename = filename + "I" 
     # 3 statements
-    if re.search(b'\x46.?\x00.+\x46.?\x00.+\x46.?\x00',sector_contents):
-      filename = filename + "C"
+    filename = filename + "C"
     # the footer
     if sector_contents.find(GFA_FOOTER) != -1:
       filename = filename + "F" 
-    if filename != "":
-      filename = "sectors/" + str(sector_counter) + "." + filename + ".sector" 
-      with open(filename,"wb") as writer:
-        writer.write(sector_contents)
+    filename = "sectors/" + str(sector_counter) + ".sec" 
+    with open(filename,"wb") as writer:
+      writer.write(sector_contents)
     if sector_counter == 1440:
       running = False
     else:
